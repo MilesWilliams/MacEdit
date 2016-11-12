@@ -1,6 +1,7 @@
 import sys
 from PyQt5 import QtGui, QtCore
-from PyQt5.QtWidgets import QMainWindow, QApplication, QTextEdit, QAction, QFileDialog
+from PyQt5 import QtPrintSupport
+from PyQt5.QtWidgets import QMainWindow, QApplication, QTextEdit, QAction, QFileDialog, QDialog
 from PyQt5.QtCore import Qt
 
 
@@ -36,6 +37,21 @@ class MainWindow(QMainWindow):
         self.toolbar.addAction(self.saveAction)
 
         # Makes the next toolbar appear under this one
+        self.addToolBarBreak()
+
+        self.printAction = QAction(QtGui.QIcon("icons/print.png"), "Print document", self)
+        self.printAction.setStatusTip("Print the document")
+        self.printAction.setShortcut("ctrl+P")
+        self.printAction.triggered.connect(self.print)
+
+        self.previewAction = QAction(QtGui.QIcon("icons/preview.png"), "Preview document", self)
+        self.previewAction.setStatusTip("Preview this document before printing")
+        self.previewAction.setShortcut("ctrl+shift+P")
+        self.previewAction.triggered.connect(self.preview)
+
+        self.toolbar.addAction(self.printAction)
+        self.toolbar.addAction(self.previewAction)
+
         self.addToolBarBreak()
 
     def initFormatbar(self):
@@ -98,6 +114,24 @@ class MainWindow(QMainWindow):
         # html
         with open(self.filename, "wt") as file:
             file.write(self.text.toHtml())
+
+    def preview(self):
+
+        # Open preview dialog
+        preview = QtPrintSupport.QPrintPreviewDialog()
+
+        # If a print is requested, open up the print dialogue
+        preview.paintRequested.connect(lambda p: self.text.print_(p))
+
+        preview.exec_()
+
+    def print(self):
+
+        # Open printing dialog
+        dialog = QtPrintSupport.QPrintDialog()
+
+        if dialog.exec() == QDialog.Accepted:
+            self.text.document().print_(dialog.printer())
 
 
 def main():
