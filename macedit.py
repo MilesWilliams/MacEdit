@@ -1,7 +1,7 @@
 import sys
 from PyQt5 import QtGui, QtCore
 from PyQt5 import QtPrintSupport
-from PyQt5.QtWidgets import QMainWindow, QApplication, QTextEdit, QAction, QFileDialog, QDialog
+from PyQt5.QtWidgets import QMainWindow, QApplication, QTextEdit, QAction, QFileDialog, QDialog, QFontComboBox, QComboBox, QColorDialog, QSpinBox
 from PyQt5.QtCore import Qt
 
 
@@ -110,11 +110,95 @@ class MainWindow(QMainWindow):
         self.toolbar.addAction(bulletAction)
         self.toolbar.addAction(numberedAction)
 
-        self.toolbar.addSeparator
+        self.addToolBarBreak()
 
     def initFormatbar(self):
 
+        fontBox = QFontComboBox(self)
+        fontBox.currentFontChanged.connect(lambda font: self.text.setCurrentFont(font))
+
+        fontSize = QSpinBox(self)
+        fontSize.setValue(14)
+        # Will display pt after font size
+        fontSize.setSuffix("pt")
+        fontSize.valueChanged.connect(lambda size: self.text.setFontPointSize(size))
+
+
+
+        fontColour = QAction(QtGui.QIcon("icons/font-color.png"), "Change font colour", self)
+        fontColour.setStatusTip("Change the font colour")
+        fontColour.triggered.connect(self.fontColour)
+
+        backColour = QAction(QtGui.QIcon("icons/highlight.png"), "Change background colour", self)
+        backColour.setStatusTip("Change the background colour")
+        backColour.triggered.connect(self.highlight)
+
+        # This create a toolbar section
         self.formatBar = self.addToolBar("Format")
+
+        self.formatBar.addWidget(fontBox)
+        self.formatBar.addWidget(fontSize)
+
+        self.formatBar.addAction(fontColour)
+        self.formatBar.addAction(backColour)
+
+        self.formatBar.addSeparator()
+
+        boldAction = QAction(QtGui.QIcon("icons/bold.png"), "Bold Text", self)
+        boldAction.setStatusTip("Make your text bold")
+        boldAction.triggered.connect(self.bold)
+
+        italicAction = QAction(QtGui.QIcon("icons/italic.png"), "Itallic Text", self)
+        italicAction.setStatusTip("Make your text italic")
+        italicAction.triggered.connect(self.italic)
+
+        underlineAction = QAction(QtGui.QIcon("icons/underline.png"), "Underline Text", self)
+        underlineAction.setStatusTip("Underline your text")
+        underlineAction.triggered.connect(self.underline)
+
+        strikeAction = QAction(QtGui.QIcon("icons/strike.png"), "Strike-out", self)
+        strikeAction.setStatusTip("Put a strike through your text")
+        strikeAction.triggered.connect(self.strike)
+
+        superAction = QAction(QtGui.QIcon("icons/superscript.png"), "Superscript", self)
+        superAction.setStatusTip("Superscript your text")
+        superAction.triggered.connect(self.superScript)
+
+        subAction = QAction(QtGui.QIcon("icons/subscript.png"), "Subscript", self)
+        subAction.setStatusTip("Subscript your text")
+        subAction.triggered.connect(self.subScript)
+
+        self.formatBar.addAction(boldAction)
+        self.formatBar.addAction(italicAction)
+        self.formatBar.addAction(underlineAction)
+        self.formatBar.addAction(strikeAction)
+        self.formatBar.addAction(superAction)
+        self.formatBar.addAction(subAction)
+
+        self.formatBar.addSeparator()
+
+        alignLeft = QAction(QtGui.QIcon("icons/align-left.png"), "Align Left", self)
+        alignLeft.setStatusTip("Align left your text")
+        alignLeft.triggered.connect(self.alignLeft)
+
+        alignRight = QAction(QtGui.QIcon("icons/align-right.png"), "Align Right", self)
+        alignRight.setStatusTip("Align right your text")
+        alignRight.triggered.connect(self.alignRight)
+
+        alignCenter = QAction(QtGui.QIcon("icons/align-center.png"), "Align Center", self)
+        alignCenter.setStatusTip("Center align your text")
+        alignCenter.triggered.connect(self.alignCenter)
+
+        alignJustify = QAction(QtGui.QIcon("icons/align-justify.png"), "Align Justify", self)
+        alignJustify.setStatusTip("Justify your text")
+        alignJustify.triggered.connect(self.alignJustify)
+
+        self.formatBar.addAction(alignLeft)
+        self.formatBar.addAction(alignRight)
+        self.formatBar.addAction(alignCenter)
+        self.formatBar.addAction(alignJustify)
+
+        self.formatBar.addSeparator()
 
         indentAction = QAction(QtGui.QIcon("icons/indent.png"),
                                "Indent Area", self)
@@ -130,6 +214,7 @@ class MainWindow(QMainWindow):
 
         self.formatBar.addAction(indentAction)
         self.formatBar.addAction(dedentAction)
+
 
     def initMenuBar(self):
         menubar = self.menuBar()
@@ -149,6 +234,21 @@ class MainWindow(QMainWindow):
         edit.addAction(self.pasteAction)
         edit.addAction(self.undoAction)
         edit.addAction(self.redoAction)
+
+        # Toggling actions for the varuious bars
+        toolbarAction = QAction("Toggle Toolbar", self)
+        toolbarAction.triggered.connect(self.toggleToolbar)
+
+        formatbarAction = QAction("Toogle Formatbar", self)
+        formatbarAction.triggered.connect(self.toggleFormatbar)
+
+        statusbarAction = QAction("Toggle Statusbar", self)
+        statusbarAction.triggered.connect(self.toggleStatusbar)
+
+        view.addAction(toolbarAction)
+        view.addAction(formatbarAction)
+        view.addAction(statusbarAction)
+
 
     def initUI(self):
 
@@ -170,7 +270,7 @@ class MainWindow(QMainWindow):
         self.text.setTabStopWidth(33)
 
         # Setting the window icon
-        self.setWindowIcon(QtGui.QIcon("icons/icon.png"))
+        self.setWindowIcon(QtGui.QIcon("pythonlogo.png"))
 
         # Displaying the cursor's current line and column number in the
         # status bar
@@ -224,7 +324,6 @@ class MainWindow(QMainWindow):
         if dialog.exec() == QDialog.Accepted:
             self.text.document().print_(dialog.printer())
 
-
     # As you can see, we don't make these actions (bulletList and numberList)
     # class members because we don't need to access them anywhere else in our
     # class. We only need to create and use them within the scope of initToolbar
@@ -241,6 +340,106 @@ class MainWindow(QMainWindow):
 
         # Insert numbered list
         cursor.insertList(QtGui.QTextListFormat.ListDecimal)
+
+    def fontFamily(self, font):
+
+        self.text.setCurrentFont(font)
+
+    def fontColour(self):
+
+        # Get a colour from the text dialog
+        colour = QColorDialog.getColor()
+
+        self.text.setTextColor(colour)
+
+    def highlight(self):
+
+        colour = QColorDialog.getColor()
+
+        self.text.setTextBackgroundColor(colour)
+
+    def bold(self):
+
+        if self.text.fontWeight() == QtGui.QFont.Bold:
+
+            self.text.setFontWeight(QtGui.QFont.Normal)
+
+        else:
+
+            self.text.setFontWeight(QtGui.QFont.Bold)
+
+    def italic(self):
+
+        state = self.text.fontItalic()
+
+        self.text.setFontItalic(not state)
+
+    def underline(self):
+
+        state = self.text.fontUnderline()
+
+        self.text.setFontUnderline(not state)
+
+    def strike(self):
+
+        # Grab the text's format
+        format = self.text.currentCharFormat()
+
+        # Set the fontStrikeOut property to its opposite
+        format.setFontStrikeOut(not format.fontStrikeOut())
+
+        # And set the next char format
+        self.text.setCurrentCharFormat(format)
+
+    def superScript(self):
+
+        # Grab the current format
+        format = self.text.currentCharFormat()
+
+        # And get the vertical alignment property
+        align = format.verticalAlignment()
+
+        if align == QtGui.QTextCharFormat.AlignNormal:
+
+            format.setVerticalAlignment(QtGui.QTextCharFormat.AlignSuperScript)
+
+        else:
+
+            format.setVerticalAlignment(QtGui.QTextCharFormat.AlignNormal)
+
+        # Set the new format
+        self.text.setCurrentCharFormat(format)
+
+    def subScript(self):
+
+        # Grab the current format
+        format = self.text.currentCharFormat()
+
+        # And get the vertical alignment property
+        align = format.verticalAlignment()
+
+        # Toggle the state
+        if align == QtGui.QTextCharFormat.AlignNormal:
+
+            format.setVerticalAlignment(QtGui.QTextCharFormat.AlignSubScript)
+
+        else:
+
+            format.setVerticalAlignment(QtGui.QTextCharFormat.AlignNormal)
+
+        self.text.setCurrentCharFormat(format)
+
+    def alignLeft(self):
+        self.text.setAlignment(Qt.AlignLeft)
+
+    def alignRight(self):
+        self.text.setAlignment(Qt.AlignRight)
+
+    def alignCenter(self):
+        self.text.setAlignment(Qt.AlignCenter)
+
+    def alignJustify(self):
+        self.text.setAlignment(Qt.AlignJustify)
 
     def indent(self):
 
@@ -332,6 +531,26 @@ class MainWindow(QMainWindow):
 
                 cursor.deleteChar()
 
+    def toggleToolbar(self):
+
+        state = self.toolbar.isVisible()
+
+        # Set the state to its inverse
+        self.toolbar.setVisible(not state)
+
+    def toggleFormatbar(self):
+
+        state = self.formatBar.isVisible()
+
+        # set the state to its inverse
+        self.formatBar.setVisible(not state)
+
+    def toggleStatusbar(self):
+
+        state = self.statusbar.isVisible()
+
+        # set the state to its inverse
+        self.statusbar.setVisible(not state)
 
 def main():
 
